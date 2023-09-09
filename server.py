@@ -6,7 +6,7 @@ import uuid
 
 
 # Constants
-VERSION = "5.0"
+VERSION = "5.1"
 ROOT_DIR = "htdocs"
 TEMP_FILE_PATH = False
 
@@ -32,8 +32,8 @@ def print_log(method,path,status):
 
 
 # Create a PHP Array from request data
-def create_php_object(data):
-    php_string = "$data = array(\n"
+def create_php_array(data):
+    php_string = " array(\n"
     for item in data:
         php_string += f"    '{item[0]}' => '{item[1]}',\n"
     php_string += ");"
@@ -42,7 +42,10 @@ def create_php_object(data):
 
 def send_response(connection, response):
     try:
-        data = response.encode("utf-8")        
+        if isinstance(response, str):
+            data = response.encode("utf-8")
+        else:
+            data = response
         sent = 0
         while sent < len(data):
             remaining_data = data[sent:]
@@ -73,6 +76,8 @@ def start_web_server(host, port):
         while True:
             TEMP_FILE_PATH = False
             params = False
+            content_type = "text/html"
+
             connection, address = server_socket.accept()
             request_lines = connection.recv(4096).decode("utf-8").split("\r\n") # get request lines
             # split GET request parameters
@@ -98,7 +103,7 @@ def start_web_server(host, port):
                         # Handle POST data
                         if request_method == "POST": 
                             post_data = list(map(lambda x: [ it for it in x.split("=")], request_lines[request_lines.index('') + 1].split("&"))) # convert to list [['n1', '5'], ['n2', '8']]
-                            php_text = "<?php " + create_php_object(post_data) + "\n $_POST = $data; ?> "  # create PHP code with $_POST data
+                            php_text = "<?php \n $_POST = " + create_php_array(post_data) + " ?> \n\n"
 
                             with open(file_path, 'r') as php_file: # read php file
                                 php_code = php_file.read()
@@ -115,7 +120,7 @@ def start_web_server(host, port):
                         if request_method == "GET" and params: # work only if request has URL parameters
                             get_data = list(map(lambda x: [ it for it in x.split("=")], params.split("&")))  ## Work same as above code
 
-                            php_text = "<?php " + create_php_object(get_data) + "\n $_GET = $data; ?> "
+                            php_text = "<?php \n $_GET = " + create_php_array(get_data) + " ?> \n\n"
 
                             with open(file_path, 'r') as php_file:
                                 php_code = php_file.read()
@@ -130,7 +135,7 @@ def start_web_server(host, port):
 
                         try:
                             output = subprocess.run(['php', file_path], capture_output=True, text=True, check=True)  # Create subprocess to run php file and get output
-                            response = "HTTP/1.1 200 OK\r\n\r\n" + output.stdout 
+                            response = f"HTTP/1.1 200 OK\r\nContent-Type: {content_type}\r\n\r\n" + output.stdout
                             print_log(request_method, path, 200)
 
                         except subprocess.CalledProcessError as e:
@@ -149,7 +154,16 @@ def start_web_server(host, port):
                         try:
                             with open(file_path, "rb") as file:
                                 file_content = file.read()
-                                response = "HTTP/1.1 200 OK\r\n\r\n" + file_content.decode("utf-8")
+                                content_type = "text/html"  # Plain text
+
+                                if file_path.endswith(".jpg") or file_path.endswith(".jpeg"):
+                                    content_type = "image/jpeg"
+                                elif file_path.endswith(".png"):
+                                    content_type = "image/png"
+                                elif file_path.endswith(".mp4"):
+                                    content_type = "video/mp4"
+
+                                response = f"HTTP/1.1 200 OK\r\nContent-Type: {content_type}\r\n\r\n".encode("utf-8") + file_content
                                 print_log(request_method, path, 200)
                         except FileNotFoundError:
                             response = "HTTP/1.1 404 Not Found\r\n\r\nFile Not Found"
