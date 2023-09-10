@@ -103,7 +103,7 @@ def start_web_server(host, port):
                         # Handle POST data
                         if request_method == "POST": 
                             post_data = list(map(lambda x: [ it for it in x.split("=")], request_lines[request_lines.index('') + 1].split("&"))) # convert to list [['n1', '5'], ['n2', '8']]
-                            php_text = f"<?php \n $_POST =  {create_php_array(post_data)}  ?> \n\n"
+                            php_text = f"<?php \n $_SERVER['REQUEST_METHOD'] = 'POST'; \n $_POST =  {create_php_array(post_data)}  ?> \n\n"
 
                             with open(file_path, 'r') as php_file: # read php file
                                 php_code = php_file.read()
@@ -120,7 +120,7 @@ def start_web_server(host, port):
                         if request_method == "GET" and params: # work only if request has URL parameters
                             get_data = list(map(lambda x: [ it for it in x.split("=")], params.split("&")))  ## Work same as above code
 
-                            php_text = f"<?php \n $_GET =  {create_php_array(get_data)}  ?> \n\n"
+                            php_text = f"<?php \n $_SERVER['REQUEST_METHOD'] = 'GET'; \n $_GET =  {create_php_array(get_data)}  ?> \n\n"
 
                             with open(file_path, 'r') as php_file:
                                 php_code = php_file.read()
@@ -142,12 +142,12 @@ def start_web_server(host, port):
                             response = "HTTP/1.1 500 Internal Server Error\r\n\r\nInternal Server Error\n" + e.stderr
                             print_log(request_method, path, 500)
 
-                        if TEMP_FILE_PATH:   # Delete temporary file 
-                            try:
-                                os.remove(TEMP_FILE_PATH)
-                                # print(f"File '{TEMP_FILE_PATH}' has been deleted.")
-                            except OSError as e:
-                                print(f"Error deleting file: {e}")
+                        # if TEMP_FILE_PATH:   # Delete temporary file 
+                        #     try:
+                        #         os.remove(TEMP_FILE_PATH)
+                        #         # print(f"File '{TEMP_FILE_PATH}' has been deleted.")
+                        #     except OSError as e:
+                        #         print(f"Error deleting file: {e}")
 
                     else:
                         # Handle HTML files
