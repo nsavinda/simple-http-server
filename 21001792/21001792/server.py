@@ -28,7 +28,7 @@ def print_log(method,path,status):
     elif 500 <= status < 600:
         status = WHITEONRED + str(status) + RESET
 
-    print(method + "\t" + path + "\t" + str(status))
+    print(method + "\t" + str(status) + "\t" + path)
 
 
 # Create a PHP Array from request data
