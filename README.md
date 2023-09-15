@@ -15,10 +15,6 @@ python server.py
 Put your files to htdocs folder
 
 
-
-
-
-
 # About 
 
 - Support for POST and GET requests 
@@ -34,6 +30,12 @@ Put your files to htdocs folder
 │   ├── index.php                  # Form
 │   ├── add.php                    # Php code to add numbers
 │   ├── image.jpg                  # Image
+|   ├── form.html
+|   ├── favicon.ico
+|   ├── 1/
+|   |   ├── add.php
+|   |   ├── image.png
+|   |   ├── index.php
 |
 ├── server.py                      # Main File 
 ```
